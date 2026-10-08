@@ -37,6 +37,10 @@ Status: experimental. No changes to the workflow module are needed.
   these itself through Temporal's HTTP API, matching the module's messages and payloads (`docs/wire-contract.md`).
 - **Mounts.** `/integrations/{name}/workflow/…` is one integration's API, unchanged: a client only swaps the base
   URL. `/workflow/…` spans the namespace.
+- **Commands.** `POST /runtime/integrations/{name}/commands` (port 9490, `x-runtime-key`) takes the
+  `{operation, params, identity}` commands of `workflow.management` — the format ICP's command tunnel carries — so a
+  console can drive the runtime the way it drives the tunnel, including operations the REST API does not expose
+  (`workItems.list`). Owner-bound operations run in the runtime; the rest in the embedded module.
 - **Temporal tokens.** `POST /runtime/tokens` (with `x-admin-key`) issues RS256 tokens with Temporal permissions
   (`<namespace>:worker|write|read|admin`, or system admin). `/jwks.json` is what Temporal's JWT authorizer trusts.
   The workflow module enables TLS whenever `authApiKey` is set, so tokens need TLS on Temporal's frontend.

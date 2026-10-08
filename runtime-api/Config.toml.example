@@ -3,6 +3,8 @@ namespace = "finance"
 temporalHttpUrl = "http://localhost:7310"
 managementUrl = "http://localhost:8240/workflow"
 adminApiKey = "<choose one>"
+# Key a trusted gateway (ICP in the workflow profile) sends to POST /runtime/integrations/{name}/commands on :9490.
+commandApiKey = "<choose one>"
 
 [[registrationKeys]]
 keyId = "finance-1"

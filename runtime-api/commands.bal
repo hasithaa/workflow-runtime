@@ -40,6 +40,44 @@ service /runtime on new http:Listener(commandPort) {
         }
         return respond(check executeFor(entry, command));
     }
+
+    // Managed runtimes and their liveness, for a console that mirrors them.
+    isolated resource function get integrations(@http:Header {name: "x-runtime-key"} string? key) returns http:Response {
+        if commandApiKey == "" || key != commandApiKey {
+            return respond(failure(401, "A valid x-runtime-key is required"));
+        }
+        return respond(ok(integrationsView()));
+    }
+
+    // The registered metadata document of an integration's current checksum.
+    isolated resource function get integrations/[string name]/metadata(@http:Header {name: "x-runtime-key"} string? key)
+            returns http:Response {
+        if commandApiKey == "" || key != commandApiKey {
+            return respond(failure(401, "A valid x-runtime-key is required"));
+        }
+        IntegrationRecord? entry = integrationNamed(name);
+        string? checksum = entry is IntegrationRecord ? entry.currentChecksum : ();
+        if entry is () || checksum is () {
+            return respond(failure(404, string `Integration '${name}' is not registered with this runtime`));
+        }
+        return respond(ok(entry.descriptors[checksum]));
+    }
+}
+
+isolated function integrationsView() returns json {
+    json[] out = [];
+    foreach IntegrationRecord entry in allIntegrations() {
+        json[] runtimes = from RuntimeRecord rt in entry.runtimes select {...rt, online: isOnline(rt)};
+        out.push({
+            name: entry.name,
+            namespace: entry.namespace,
+            taskQueue: entry.taskQueue,
+            checksum: entry.currentChecksum,
+            knownChecksums: entry.descriptors.keys(),
+            runtimes
+        });
+    }
+    return {integrations: out};
 }
 
 # Port of the commands endpoint, separate from the public Workflow Management API.

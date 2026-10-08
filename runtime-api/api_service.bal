@@ -51,22 +51,7 @@ service / on new http:Listener(apiPort) {
     }
 
     // Admin view of managed runtimes: registrations, liveness, task queues.
-    isolated resource function get runtime/integrations() returns json {
-        json[] out = [];
-        foreach IntegrationRecord entry in allIntegrations() {
-            json[] runtimes = from RuntimeRecord rt in entry.runtimes
-                select {...rt, online: isOnline(rt)};
-            out.push({
-                name: entry.name,
-                namespace: entry.namespace,
-                taskQueue: entry.taskQueue,
-                checksum: entry.currentChecksum,
-                knownChecksums: entry.descriptors.keys(),
-                runtimes
-            });
-        }
-        return {integrations: out};
-    }
+    isolated resource function get runtime/integrations() returns json => integrationsView();
 }
 
 isolated function dispatch(IntegrationRecord? scope, string[] path, http:Request req) returns http:Response|error {

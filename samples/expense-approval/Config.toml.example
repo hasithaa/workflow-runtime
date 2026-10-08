@@ -1,0 +1,19 @@
+# Copy to Config.toml. Values match runtime-api/Config.toml.example and deploy/temporal-dev.
+[ballerina.workflow]
+mode = "SELF_HOSTED"
+url = "localhost:7300"
+namespace = "finance"
+taskQueue = "EXPENSE_APPROVAL_QUEUE"
+
+# The integration's own management API: the contract tests' reference host.
+[ballerina.workflow.management.rest]
+enableManagementApi = true
+port = 8234
+enableBasicAuth = false
+trustForwardedIdentity = true
+
+[hasitha.workflow.runtime.bridge]
+runtimeUrl = "http://localhost:9460"
+integration = "expense-approval"
+integrationVersion = "0.1.0"
+secret = "finance-1.<key material, at least 32 bytes>"

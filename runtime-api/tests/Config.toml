@@ -1,0 +1,10 @@
+namespace = "test"
+registrationPort = 19460
+apiPort = 19470
+tokenPort = 19480
+
+[ballerina.workflow]
+mode = "IN_MEMORY"
+
+[ballerina.workflow.management.rest]
+enableManagementApi = false

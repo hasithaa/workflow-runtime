@@ -1,0 +1,24 @@
+# Temporal on PostgreSQL for local development: no auth, namespace `finance`, gRPC 7300, HTTP API 7310.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+    volumes: ["temporal-dev-db:/var/lib/postgresql/data"]
+  temporal:
+    image: temporalio/auto-setup:1.29.7
+    depends_on: [postgres]
+    environment:
+      DB: postgres12
+      DB_PORT: "5432"
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: postgres
+      BIND_ON_IP: 0.0.0.0
+      TEMPORAL_BROADCAST_ADDRESS: 127.0.0.1
+      DEFAULT_NAMESPACE: finance
+      DEFAULT_NAMESPACE_RETENTION: 720h
+    ports: ["7300:7233", "7310:7243"]
+volumes:
+  temporal-dev-db:

@@ -1,0 +1,10 @@
+target/
+Dependencies.toml
+Config.toml
+!tests/Config.toml
+!runtime-api/tests/Config.toml
+secrets/
+deploy/temporal-secured/certs/
+.run/
+.DS_Store
+__pycache__/

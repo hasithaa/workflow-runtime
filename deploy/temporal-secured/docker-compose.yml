@@ -1,0 +1,30 @@
+# Temporal with the JWT authorizer and frontend TLS, trusting the Workflow Runtime's JWKS (runtime-api :9480).
+# Run ./gen-secrets.sh first. gRPC 7400 (TLS), HTTP API 7410. Create namespaces with a runtime admin token.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: temporal
+      POSTGRES_PASSWORD: temporal
+  temporal:
+    image: temporalio/auto-setup:1.29.7
+    depends_on: [postgres]
+    environment:
+      DB: postgres12
+      DB_PORT: "5432"
+      POSTGRES_USER: temporal
+      POSTGRES_PWD: temporal
+      POSTGRES_SEEDS: postgres
+      BIND_ON_IP: 0.0.0.0
+      TEMPORAL_BROADCAST_ADDRESS: 127.0.0.1
+      USE_INTERNAL_FRONTEND: "true"
+      SERVICES: frontend:internal-frontend:history:matching:worker
+      TEMPORAL_AUTH_AUTHORIZER: default
+      TEMPORAL_AUTH_CLAIM_MAPPER: default
+      TEMPORAL_JWT_KEY_SOURCE1: http://host.docker.internal:9480/jwks.json
+      SKIP_DEFAULT_NAMESPACE_CREATION: "true"
+      TEMPORAL_TLS_FRONTEND_CERT: /certs/frontend.pem
+      TEMPORAL_TLS_FRONTEND_KEY: /certs/frontend.key
+      SKIP_ADD_CUSTOM_SEARCH_ATTRIBUTES: "true"
+    volumes: ["./certs:/certs:ro"]
+    ports: ["7400:7233", "7410:7243"]

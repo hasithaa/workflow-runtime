@@ -64,6 +64,28 @@ python3 tests/contract/contract.py
 The contract suite runs 28 steps against each host (starts, task completion and failure, role checks, reassign,
 deadlines, data events, review decisions, bulk retry) and checks status codes and response fields.
 
+## Secured Temporal (TLS + tokens)
+
+```sh
+cd deploy/temporal-secured
+./gen-secrets.sh                                    # signing key, JWKS, CA and frontend certificate
+python3 -m http.server 9480 --directory ../../runtime-api/secrets &   # JWKS for Temporal, independent of the runtime
+docker compose -p wfrt-sec up -d                    # gRPC 7400 (TLS), HTTP API 7410
+ADM=$(./mint-token.sh temporal-system:admin)        # bootstrap tokens without the runtime running
+temporal operator namespace create -n hr --address localhost:7400 --tls-ca-path certs/ca.pem --api-key "$ADM"
+temporal operator search-attribute create -n hr --name WorkflowKind --type Keyword \
+  --address localhost:7400 --tls-ca-path certs/ca.pem --api-key "$ADM"
+./mint-token.sh hr:worker hr:write                   # the integration's authApiKey
+```
+
+Then set, in the runtime: `temporalHttpUrl = "https://localhost:7410"`, `temporalCaCert`, `temporalAuth = true`, and the
+embedded module's `authApiKey` (a system admin token) and `authCaCert`; in the integration: `authApiKey` (worker token)
+and `authCaCert`. The contract suite passes 28/28 against this setup too.
+
+Serve the JWKS from outside the runtime process: the embedded module connects to Temporal while the runtime starts,
+before the runtime's own `/jwks.json` listener is up. On macOS, if a JVM with TLS enabled dies instantly with signal 9,
+start it with `-Dio.grpc.netty.shaded.io.netty.handler.ssl.noOpenSsl=true` (Netty's native OpenSSL).
+
 ## Known limits
 
 - In-memory registry: registrations are rebuilt from heartbeats after a restart.
